@@ -10,15 +10,14 @@ def filtro_butterwoth_passa_altas(imagem, D0, n):
             D = np.sqrt((u - M/2) ** 2 + (v - N/2) ** 2)
             if D == 0:
                 H[u,v] = 0
-                
             else:
                 H[u,v] = 1 / (1 + (D0 / D) ** (2 * n))
                 
     return H 
 
-def filtro_notch_rejeita(imagem, pontos_ruido, D0 = 10, n = 2):
+def filtro_notch_rejeita(imagem, pontos_ruido, D0=10, n=2):
     """
-    Pontos_ruido: lista de tuplas (u,v) com as coordenadas dos spikes de ruido.
+    pontos_ruido: lista de tuplas (u,v) com as coordenadas dos spikes de ruido.
     """  
     M, N = imagem.shape
     H = np.ones((M, N), dtype=np.float32)
@@ -26,7 +25,6 @@ def filtro_notch_rejeita(imagem, pontos_ruido, D0 = 10, n = 2):
     for u in range(M):
         for v in range(N):
             for (uk, vk) in pontos_ruido:
-                
                 # Distância ao ponto de ruído e seu simétrico
                 Dk = np.sqrt((u - M/2 - uk)**2 + (v - N/2 - vk)**2)
                 D_neg_k = np.sqrt((u - M/2 + uk)**2 + (v - N/2 + vk)**2)

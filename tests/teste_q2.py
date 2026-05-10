@@ -53,12 +53,19 @@ def testar_questao2_parteB():
 
     print("Processando Parte B (Domínio da Frequência)...")
     
-    # --- Aplica o Laplaciano via FFT ---
-    agucada_freq, bordas_freq = laplaciano_frequencia(img)
+    # --- Aplica o filtro Passa-Altas Ideal ---
+    agucada_ideal, bordas_ideal = agucar_frequencia(img, tipo_filtro="ideal", D0=30)
+    
+    # --- Aplica o filtro Passa-Altas Gaussiano ---
+    agucada_gauss, bordas_gauss = agucar_frequencia(img, tipo_filtro="gaussiano", D0=30)
 
-    # Salvar Resultados
-    cv2.imwrite(os.path.join(output_path, "2_B_agucada_frequencia.jpg"), agucada_freq)
-    cv2.imwrite(os.path.join(output_path, "extra_bordas_frequencia.jpg"), bordas_freq)
+    # Salvar Resultados do Ideal
+    cv2.imwrite(os.path.join(output_path, "2_B_agucada_ideal.jpg"), agucada_ideal)
+    cv2.imwrite(os.path.join(output_path, "extra_bordas_ideal.jpg"), bordas_ideal)
+    
+    # Salvar Resultados do Gaussiano
+    cv2.imwrite(os.path.join(output_path, "2_B_agucada_gaussiano.jpg"), agucada_gauss)
+    cv2.imwrite(os.path.join(output_path, "extra_bordas_gaussiano.jpg"), bordas_gauss)
 
     print(f"Imagens da Parte B salvas na pasta '{output_path}'.")
 

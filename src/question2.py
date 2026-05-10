@@ -42,44 +42,43 @@ def agucar_laplaciano(imagem, sigma=None):
     # Retornamos as bordas também para colocar no relatório!
     
 
-def laplaciano_frequencia(imagem):
+def agucar_frequencia(imagem, tipo_filtro = "gaussiano", D0 = 30):
+    """
+    Realiza o aguçamento do dominio de frequência usando um filtro Passa-Altas.
+    tipo_filtro: "ideal" ou "gaussiano"
+    D0: Frequência de corte
+    """
+    
     # Obtendo dimensões da imagem
     M, N = imagem.shape
     
-    # Transformada de Fourier (FFT) e deslocamento do zero para o centro (shift)
-    # Usamos np.fft para facilitar a manipulação do expectro
-    
+    # FFT e Shift
     F = np.fft.fft2(imagem)
     Fshift = np.fft.fftshift(F)
     
-    # Criar o Filtro Laplaciano no domínio da frequência H(u,v)
-    # H(u,v) = -4 * pi^2 * D(u,v)^2, onde D é a distância ao centro
-    P, Q = M, N
-    H = np.zeros((P, Q), dtype=np.float32)
-    
-    for u in range(P):
-        for v in range(Q):
-            # Distância ao centro do espectro (M/2, N/2)
-            dist_centro = (u - P/2) ** 2 + (v - Q/2) ** 2
-            H[u, v] = -4 * (np.pi**2) * dist_centro
+    # Criar o Filtro Passa-Altas
+    H = np.zeros((M, N), dtype=np.float32)
+    for u in range(M):
+        for v in range(N):
+            # Distância D(u,v) ao centro
+            D = np.sqrt((u - M/2) ** 2 + (v - N/2) ** 2)
+            
+            if tipo_filtro == "ideal":
+                # Filtro Ideal Passa-Altas (Corta a Faca)
+                H[u,v] = 0 if D <= D0 else 1
+            elif tipo_filtro == "gaussiano":
+                # Filtro Gaussiano Passa-Altas (Transição Suave)
+                H[u,v] = 1 - np.exp(-(D**2) / (2 * D0**2))
 
-    # Aplicar o filtro: G(u,v) = H(u,v) * F(u,v)
-    G = Fshift * H
+    # Aplicar o filtro e Transformada Inversa
+    Gshift = Fshift * H
+    img_bordas = np.abs(np.fft.ifft2(np.fft.ifftshift(Gshift)))
+
+    # Aguçamento: Imagem Original + Altas Frequências (Bordas)
+    bordas_norm = cv2.normalize(img_bordas, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     
-    # Inverter o Shift e aplicar a Transformada Inversa (IFFT)
-    G_ishift = np.fft.ifftshift(G)
-    img_back = np.fft.ifft2(G_ishift)
+    # Somar com a original evitando estourar o limite de 255
+    imagem_agucada = cv2.add(imagem, bordas_norm)
     
-    # Pegando somente a parte real (ou a magnitude)
-    img_laplaciana = np.abs(img_back)
-    
-    # Aguçamento: Original - Laplaciano
-    # Vamos subtrair para realçar
-    img_laplaciana_norm = cv2.normalize(img_laplaciana, None, 0, 255, cv2.NORM_MINMAX)
-    
-    # Resultado final combinado com a original
-    imagem_agucada = imagem.astype(np.float32) + img_laplaciana_norm
-    imagem_final = np.clip(imagem_agucada, 0, 255).astype(np.uint8)
-    
-    return imagem_final, img_laplaciana_norm.astype(np.uint8)     
+    return imagem_agucada, bordas_norm    
     
