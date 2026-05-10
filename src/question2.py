@@ -13,21 +13,23 @@ import numpy as np
 
 def agucar_laplaciano(imagem, sigma=None):
     """
-    Aplica o aguçamento usando filtro Laplaciano (3x3, centro 8).
-    Se sigma for passado, aplica suavização Gaussiana antes (Itens 2.2 e 2.3).
+    Aplica o aguçamento usando filtro Laplaciano.
+    Se sigma=None (Item 2.1): Usa o Laplaciano em todas as direções (centro 8).
+    Se sigma for passado (Itens 2.2 e 2.3): Aplica Gaussiano e usa Laplaciano em cruz (centro 4).
     """
-    # Se tem sigma, aplica o Gaussiano antes (tamanho do kernel Gaussiano = 3x3)
-    if sigma is not None:
-        # O (3,3) é o tamanho da janela, e o sigmaX dita a força do desfoque
-        img_processada = cv2.GaussianBlur(imagem, (3, 3), sigmaX=sigma)
-    else:
+    if sigma is None:
+        # Item 2.1 - Sem suavização e com Kernel +/- 8 no centro (Todas as direções)
         img_processada = imagem.copy()
-
-    # Definir o Kernel Laplaciano (+8 no centro)
-    kernel = np.array([[-1, -1, -1],
-                       [-1,  8, -1],
-                       [-1, -1, -1]])
-
+        kernel = np.array([[-1, -1, -1],
+                           [-1,  8, -1],
+                           [-1, -1, -1]])
+    else:
+        # Itens 2.2 e 2.3 - Com suavização Gaussiana e Kernel +/- 4 no centro (Em cruz)
+        img_processada = cv2.GaussianBlur(imagem, (3, 3), sigmaX=sigma)
+        kernel = np.array([[ 0, -1,  0],
+                           [-1,  4, -1],
+                           [ 0, -1,  0]])
+        
     # Aplicar o filtro usando CV_64F (float) para não perder os valores negativos!
     bordas = cv2.filter2D(img_processada, cv2.CV_64F, kernel)
 
